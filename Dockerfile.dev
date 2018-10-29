@@ -1,0 +1,15 @@
+# Live development build (Nginx not used)
+FROM oclock/static-nginx-nodejs
+RUN apk update && apk add python
+
+WORKDIR /var/www/
+
+# npm deps
+COPY package.json /var/www/
+RUN yarn
+
+# live build
+COPY . /var/www/
+CMD yarn start
+
+EXPOSE 3000
