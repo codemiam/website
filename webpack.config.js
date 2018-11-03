@@ -1,5 +1,6 @@
 // Node import
 const path = require('path');
+const webpack = require('webpack');
 
 // Plugins de traitement pour dist/
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
@@ -8,7 +9,7 @@ const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 
 // Config pour le devServer
-const host = '0.0.0.0';
+const host = '0.0.0.0'; // Docker interface
 const port = 3000;
 
 const devMode = process.env.NODE_ENV !== 'production';
@@ -17,6 +18,10 @@ const devMode = process.env.NODE_ENV !== 'production';
 module.exports = {
   // Passe le build par dèfaut en déeveloppement
   mode: 'development',
+  // Ne pas utiliser de mock pour process
+  node: {
+    process: false
+  },
   // Expose le dossier src/ pour les imports
   resolve: {
     alias: {
@@ -110,16 +115,22 @@ module.exports = {
     ],
   },
   devServer: {
-    overlay: true, // Overlay navigateur si erreurs de build
-    stats: 'minimal', // Infos en console limitées
+    overlay: true, // overlay navigateur si erreurs de build
+    stats: 'minimal', // infos en console limitées
     progress: true, // progression du build en console
-    inline: true, // Rechargement du navigateur en cas de changement
-    open: true, // on ouvre le navigateur
+    inline: true, // rechargement du navigateur en cas de changement
+    open: false, // docker, pas d'ouverture automatique
     historyApiFallback: true,
     host: host,
     port: port,
   },
   plugins: [
+    // Déclaration des env vars du host dans le code client
+    new webpack.DefinePlugin({
+      'process': {
+        env: JSON.stringify(process.env)
+      }
+    }),
     // Permet de prendre le index.html de src comme base pour le fichier de dist/
     new HtmlWebPackPlugin({
       template: './src/index.html',
@@ -129,6 +140,6 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: '[name].css',
       chunkFilename: '[id].css',
-    }),
+    })
   ],
 };
